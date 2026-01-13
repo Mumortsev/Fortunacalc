@@ -13,12 +13,12 @@
     <style>
         :root {
             /* ЦВЕТА FORTUNA COLOR */
-            --bg-body: #F1F5F9;       /* Светло-серый фон */
-            --bg-card: #FFFFFF;       /* Белые карточки */
-            --primary: #587992;       /* Стальной синий (Brand) */
-            --primary-dark: #374f63;  /* Темный акцент */
-            --text-main: #1e293b;     /* Темно-серый текст */
-            --border-color: #e2e8f0;  /* Границы */
+            --bg-body: #F1F5F9;       
+            --bg-card: #FFFFFF;       
+            --primary: #587992;       
+            --primary-dark: #374f63;  
+            --text-main: #1e293b;     
+            --border-color: #e2e8f0;  
         }
 
         body {
@@ -28,7 +28,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- КАРТОЧКИ МАТЕРИАЛОВ --- */
+        /* --- КАРТОЧКИ --- */
         .mat-card {
             background: var(--bg-card);
             border: 2px solid transparent;
@@ -38,16 +38,12 @@
             overflow: hidden;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-        
         .mat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        
-        /* Активная карточка - Стальная рамка */
         .mat-card.active {
             border-color: var(--primary);
             background-color: #f8fafc;
             box-shadow: 0 0 0 2px rgba(88, 121, 146, 0.2);
         }
-        
         .mat-card.active .check-icon { opacity: 1; transform: scale(1); }
 
         /* --- ТАБЛИЦА --- */
@@ -58,9 +54,7 @@
             border: 1px solid var(--border-color);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-        
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        
         th {
             background: #f1f5f9;
             padding: 12px 16px;
@@ -72,7 +66,6 @@
             letter-spacing: 0.05em;
             border-bottom: 2px solid var(--border-color);
         }
-        
         td { padding: 10px 16px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         
         /* --- ИНПУТЫ --- */
@@ -86,7 +79,6 @@
             font-size: 14px;
             transition: all 0.2s;
         }
-        
         input:focus, select:focus {
             outline: none;
             border-color: var(--primary);
@@ -94,7 +86,7 @@
             box-shadow: 0 0 0 3px rgba(88, 121, 146, 0.1);
         }
         
-        /* Кастомные чекбоксы */
+        /* Чекбоксы */
         .custom-check {
             display: inline-flex;
             align-items: center;
@@ -123,21 +115,23 @@
         }
         .box svg { stroke: white; width: 12px; height: 12px; }
 
-        /* --- PDF СТИЛИ --- */
+        /* --- PDF СТИЛИ (Скрытый блок) --- */
         #invoice-view {
-            display: none;
+            display: none; /* Скрыто по умолчанию */
             background: white;
             color: black;
-            padding: 30px;
+            padding: 40px;
             font-family: 'Roboto', sans-serif;
             max-width: 800px;
             margin: 0 auto;
         }
         
+        /* При печати показываем только invoice-view */
         @media print {
             body * { visibility: hidden; }
             #invoice-view, #invoice-view * { visibility: visible; }
-            #invoice-view { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+            #invoice-view { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            #app-ui { display: none; }
         }
     </style>
 </head>
@@ -149,7 +143,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-2xl font-bold font-serif tracking-wider text-gray-800">FORTUNA<span style="color: var(--primary)">-COLOR</span></span>
                 </div>
-                <div class="text-xs text-gray-400 font-mono hidden sm:block">КАЛЬКУЛЯТОР ФАСАДОВ 2026</div>
+                <div class="text-xs text-gray-400 font-mono hidden sm:block">КАЛЬКУЛЯТОР ФАСАДОВ</div>
             </div>
         </header>
 
@@ -289,27 +283,23 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            // По умолчанию добавляем одну строку
             addRow(); 
         });
 
         // --- ЛОГИКА ---
-
         function setGlobalMaterial(type, price, el) {
             currentMaterial = type;
             currentBasePrice = price;
             
-            // Визуал карточек
             document.querySelectorAll('.mat-card').forEach(c => {
                 c.classList.remove('active');
                 c.querySelector('.check-icon').classList.remove('opacity-100', 'transform', 'scale-100');
                 c.querySelector('.check-icon').classList.add('opacity-0', 'transform', 'scale-50');
             });
             el.classList.add('active');
-            el.querySelector('.check-icon').classList.remove('opacity-0', 'transform', 'scale-50');
+            el.querySelector('.check-icon').classList.remove('opacity-0', 'transform', 'scale-100');
             el.querySelector('.check-icon').classList.add('opacity-100', 'transform', 'scale-100');
 
-            // Пересчет таблицы
             recalcAllRows();
         }
 
@@ -320,13 +310,11 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-gray-50 transition-colors group';
             
-            // HTML структуры строки
             tr.innerHTML = `
                 <td class="text-gray-400 text-center index-cell text-xs">#</td>
                 <td><input type="number" placeholder="716" class="inp-h" oninput="calcRow(this)"></td>
                 <td><input type="number" placeholder="396" class="inp-w" oninput="calcRow(this)"></td>
                 <td><input type="number" value="1" class="inp-q text-center" oninput="calcRow(this)"></td>
-                
                 <td>
                     <div class="flex flex-wrap gap-2">
                         <label class="custom-check">
@@ -341,7 +329,6 @@
                         </label>
                     </div>
                 </td>
-                
                 <td>
                     <div class="flex items-center gap-2">
                         <label class="custom-check mr-0">
@@ -351,7 +338,6 @@
                         <input type="number" value="0" disabled class="inp-handle-qty w-16 text-center opacity-50" oninput="calcRow(this)">
                     </div>
                 </td>
-                
                 <td class="text-right font-mono font-bold text-lg text-slate-700 row-total">0 ₽</td>
                 <td class="text-center">
                     <button onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 p-2 rounded transition">
@@ -373,7 +359,7 @@
             if(el.checked) {
                 qtyInput.disabled = false;
                 qtyInput.classList.remove('opacity-50');
-                qtyInput.value = mainQty; // Авто-подстановка кол-ва
+                qtyInput.value = mainQty;
             } else {
                 qtyInput.disabled = true;
                 qtyInput.classList.add('opacity-50');
@@ -384,28 +370,19 @@
 
         function calcRow(el) {
             const tr = el.closest('tr');
-            
-            // Входные данные
             const h = parseFloat(tr.querySelector('.inp-h').value) || 0;
             const w = parseFloat(tr.querySelector('.inp-w').value) || 0;
             const q = parseInt(tr.querySelector('.inp-q').value) || 0;
-            
-            // Площадь (м2)
             const areaM2 = (h * w) / 1000000;
             
-            // База + Допы (за м2)
             let rateM2 = currentBasePrice;
             if(tr.querySelector('.check-patina').checked) rateM2 += PRICES.patina;
             if(tr.querySelector('.check-metallic').checked) rateM2 += PRICES.metallic;
             
-            // Стоимость за фасады
             let rowSum = (areaM2 * rateM2 * q);
-            
-            // Ручки (поштучно)
             const handleQty = parseInt(tr.querySelector('.inp-handle-qty').value) || 0;
             rowSum += (handleQty * PRICES.handle);
             
-            // Вывод
             tr.querySelector('.row-total').textContent = Math.round(rowSum).toLocaleString() + ' ₽';
             tr.dataset.val = rowSum;
             tr.dataset.area = (areaM2 * q);
@@ -415,7 +392,6 @@
 
         function recalcAllRows() {
             document.querySelectorAll('#tableBody tr').forEach(tr => {
-                // Триггерим расчет через любой инпут строки
                 calcRow(tr.querySelector('.inp-h'));
             });
         }
@@ -439,4 +415,22 @@
             tr.remove();
             updateIndices();
             calculateTotal();
-            if(doc
+            if(document.getElementById('tableBody').children.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        function updateIndices() {
+            document.querySelectorAll('.index-cell').forEach((c, i) => c.textContent = i + 1);
+        }
+
+        function clearAll() {
+            if(confirm("Очистить расчет?")) {
+                document.getElementById('tableBody').innerHTML = '';
+                document.getElementById('emptyState').classList.remove('hidden');
+                calculateTotal();
+            }
+        }
+
+        // --- ГЕНЕРАЦИЯ ИНВОЙСА ---
+        f
