@@ -433,4 +433,110 @@
         }
 
         // --- ГЕНЕРАЦИЯ ИНВОЙСА ---
-        f
+        function generateInvoiceHTML() {
+            const date = new Date().toLocaleDateString();
+            const total = document.getElementById('grandTotal').textContent;
+            const baseName = LABELS[currentMaterial];
+            
+            let html = `
+                <div style="border-bottom: 2px solid #587992; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+                    <div>
+                        <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e293b;">СМЕТА ЗАКАЗА</h1>
+                        <p style="color: #64748b; margin: 5px 0 0 0;">Дата: ${date}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: bold; font-size: 20px; color: #587992;">FORTUNA-COLOR</div>
+                        <div style="font-size: 12px; color: #64748b;">МЕБЕЛЬНЫЕ ФАСАДЫ</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                    <b>Выбранный материал:</b> ${baseName} (${currentBasePrice.toLocaleString()} ₽/м²)
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9;">
+                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">#</th>
+                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Размер</th>
+                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">Кол-во</th>
+                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: left;">Опции</th>
+                            <th style="padding: 10px; border: 1px solid #e2e8f0; text-align: right;">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            document.querySelectorAll('#tableBody tr').forEach((tr, i) => {
+                const h = tr.querySelector('.inp-h').value || 0;
+                const w = tr.querySelector('.inp-w').value || 0;
+                const q = tr.querySelector('.inp-q').value || 0;
+                const price = tr.querySelector('.row-total').textContent;
+                
+                let opts = [];
+                if(tr.querySelector('.check-patina').checked) opts.push("Патина");
+                if(tr.querySelector('.check-metallic').checked) opts.push("Металлик");
+                const hQ = parseInt(tr.querySelector('.inp-handle-qty').value) || 0;
+                if(hQ > 0) opts.push(`Ручки: ${hQ} шт.`);
+                
+                const optStr = opts.length > 0 ? opts.join(", ") : "—";
+
+                html += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${i+1}</td>
+                        <td style="padding: 8px; border: 1px solid #e2e8f0;">${h} x ${w} мм</td>
+                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${q}</td>
+                        <td style="padding: 8px; border: 1px solid #e2e8f0;">${optStr}</td>
+                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-weight: bold;">${price}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 30px; text-align: right;">
+                    <div style="font-size: 14px; color: #64748b;">Итого к оплате:</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #587992;">${total}</div>
+                </div>
+            `;
+            
+            return html;
+        }
+
+        // --- PDF СКАЧИВАНИЕ (Исправлено) ---
+        function downloadPDF() {
+            const view = document.getElementById('invoice-view');
+            const app = document.getElementById('app-ui'); // Основной контент
+
+            // 1. Наполняем инвойс контентом
+            view.innerHTML = generateInvoiceHTML();
+
+            // 2. ВАЖНО: Скрываем приложение, показываем инвойс
+            app.style.display = 'none';
+            view.style.display = 'block';
+
+            const opt = {
+                margin: 10,
+                filename: 'KP_FortunaColor.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 3. Генерируем, сохраняем и возвращаем всё как было
+            html2pdf().set(opt).from(view).save().then(() => {
+                app.style.display = 'block';
+                view.style.display = 'none';
+            });
+        }
+
+        // --- ПЕЧАТЬ ---
+        function handlePrint() {
+            document.getElementById('invoice-view').innerHTML = generateInvoiceHTML();
+            window.print();
+        }
+    </script>
+</body>
+</html>
